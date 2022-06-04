@@ -30,6 +30,7 @@ public class Menu {
     private void printHeader() {
         System.out.println("+--------------------------------+");
         System.out.println("");
+        System.out.println("      Welcome to my Bank App      ");
         System.out.println("");
         System.out.println("+--------------------------------+");
     }
