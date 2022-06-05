@@ -1,4 +1,4 @@
-import java.sql.SQLOutput;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Menu {
@@ -22,31 +22,77 @@ public class Menu {
     }
 
     private void performAction(int choice) {
-        switch(choice){
-            case 0:
+        switch (choice) {
+            case 0 -> {
                 System.out.println("Thank you for using my application.");
                 System.exit(0);
-                break;
-            case 1:
-                createAnAccount();
-            case 2:
-                makeADeposit();
-            case 3:
-                makeAWithdrawal();
-            case 4:
-                listBalances();
-            default:
-                System.out.println("Unknown error has occurred.");
+            }
+            case 1 -> createAnAccount();
+            case 2 -> makeADeposit();
+            case 3 -> makeAWithdrawal();
+            case 4 -> listBalances();
+            default -> System.out.println("Unknown error has occurred.");
         }
     }
 
     private void listBalances() {
+        int account = selectAccount();
+        if(account >= 0) {
+            System.out.println(bank.getCustomer(account).getAccount());
+        }
     }
 
     private void makeAWithdrawal() {
+        int account = selectAccount();
+        if(account >= 0) {
+            System.out.println("How much do you like to withdraw: ");
+            double amount = 0;
+            try {
+                amount = Double.parseDouble(keyboard.nextLine());
+            } catch (NumberFormatException e) {
+                amount = 0;
+            }
+            bank.getCustomer(account).getAccount().withdraw(amount);
+        }
     }
 
     private void makeADeposit() {
+        int account = selectAccount();
+        if(account >= 0) {
+            System.out.println("How much do you like to deposit: ");
+            double amount = 0;
+            try {
+                amount = Double.parseDouble(keyboard.nextLine());
+            } catch (NumberFormatException e) {
+                amount = 0;
+            }
+            bank.getCustomer(account).getAccount().deposit(amount);
+        }
+    }
+
+    private int selectAccount() {
+        ArrayList<Customer> customers = bank.getCustomers();
+        if (customers.size() <= 0){
+            System.out.println("No customers at your bank.");
+            return -1;
+        }
+        System.out.println("Select an account:");
+        for (int i = 0; i < customers.size(); i++){
+            System.out.println((i + 1) + ") " + customers.get(i).basicInfo());
+        }
+        int account = 0;
+        System.out.println("Please enter your selection: "); //Hangi hesabına işlem yapılacağını seç
+        try {
+            account = Integer.parseInt(keyboard.nextLine()) - 1;
+        }
+        catch (NumberFormatException e){
+            account = -1;
+        }
+        if(account < 0 || account > customers.size()){
+            System.out.println("Invalid account selected");
+            account = -1;
+        }
+        return account;
     }
 
     private void createAnAccount() {
@@ -78,7 +124,7 @@ public class Menu {
             catch(NumberFormatException e){
                 System.out.println("Deposit must be a number");
             }
-            if (accountType.equalsIgnoreCase("checking")){
+            if (accountType.equals("checking")){
                 if(initialDeposit < 100){
                     System.out.println("Checking accounts require minimum $100 to open.");
                 }
@@ -86,7 +132,7 @@ public class Menu {
                     valid = true;
                 }
             }
-            else if (accountType.equalsIgnoreCase("savings")){
+            else if (accountType.equals("savings")){
                 if (initialDeposit < 50){
                     System.out.println("Savings accounts require minimum $50 to open.");
                 }
@@ -97,18 +143,21 @@ public class Menu {
         }
         //We can create an account now
         Account account = new Account();
-        if (accountType.equalsIgnoreCase("cheking")){
+        if (accountType.equalsIgnoreCase("checking")){
             account = new Checking(initialDeposit);
         }
         else {
             account = new Savings(initialDeposit);
         }
+        Customer customer = new Customer(firstName, lastName, ssn, account);
+        bank.addCustomer(customer);
     }
 
     private int getInput() {
         int choice = -1;
         do{
         try {
+            System.out.println("Enter your choice: ");
             choice = Integer.parseInt(keyboard.nextLine());
         }catch (NumberFormatException e) {
             System.out.println("Invalid selection. Numbers only please.");
