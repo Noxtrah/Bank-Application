@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DatabaseService {
     String url = "jdbc:mysql://localhost:3306/bankdb";
@@ -62,6 +63,107 @@ public class DatabaseService {
         return accountId;
     }
     //Read
+    Customer GetAccount(int accountId){
+        Customer customer = null;
+        Connection connection = connect();
+        try {
+            String findUserSql = "Select FirstName, LastName, SSN, Balance " + "from Users a join Mappings b on a.ID = b.UserId "
+                    + "join Accounts c on c.ID = b.AccountId " + "where c.ID = ?";
+            PreparedStatement findUser = connection.prepareStatement(findUserSql);
+            findUser.setInt(1,accountId);
+            ResultSet findUserResults = findUser.executeQuery();
+            if(findUserResults.next()){
+                String firstName = findUserResults.getString("FirstName");
+                String lastName = findUserResults.getString("LastName");
+                String ssn = findUserResults.getString("SSN");
+                AccountType accountType = AccountType.valueOf(findUserResults.getString("Type"));
+                double balance = findUserResults.getDouble("Balance");
+                Account account;
+                if(accountType == AccountType.Checking){
+                    account = new Checking(accountId, balance);
+                }
+                else if(accountType == AccountType.Savings){
+                    account = new Savings(accountId, balance);
+                }
+                else {
+                    System.err.println("Unknown account type");
+                    throw new Exception("Unknown account type");
+                }
+                customer = new Customer(firstName,lastName,ssn,account);
+            }
+            else{
+                System.err.println("No user account was found for ID " + accountId);
+            }
+        }
+        catch (Exception e){
+            System.err.println(e.getMessage());
+        }
+        return customer;
+    }
     //Update
+    boolean UpdateAccount(int accountId, double balance){
+        boolean success = false;
+        Connection connection = connect();
+        try {
+            String uptadeSql = "UPDATE Accounts SET Balance = ? WHERE ID = ?";
+            PreparedStatement updateBalance = connection.prepareStatement(uptadeSql);
+            updateBalance.setDouble(1,balance);
+            updateBalance.setInt(2,accountId);
+            updateBalance.executeUpdate();
+            success = true;
+        }
+        catch (SQLException ex){
+            System.err.println(ex.getMessage());
+        }
+        return success;
+    }
     //Delete
+    boolean DeleteAccount(int accountId){
+        boolean success = false;
+        Connection connection = connect();
+        try {
+            String deleteSql = "DELETE Users,Accounts " + "from Users join Mappings on Users.ID = Mappings.UserId "
+                             + "join Accounts on Accounts.ID = Mappings.AccountId " + "where Account.ID = ?";
+            PreparedStatement deleteAccount = connection.prepareStatement(deleteSql);
+            deleteAccount.setInt(1,accountId);
+            deleteAccount.executeUpdate();
+            success = true;
+        }
+        catch (SQLException ex){
+            System.err.println(ex.getMessage());
+        }
+        return success;
+    }
+    //Get All Accounts
+    ArrayList<Customer> GetAllAccounts() {
+        ArrayList<Customer> customers = new ArrayList<>();
+        Connection connection = connect();
+        try {
+        String findAllUsersSql = "Select AccountId, FirstName, LastName, SSN, Balance " + "from Users a join Mappings b on a.ID = b.UserId "
+                + "join Accounts c on c.ID = b.AccountId " + "where c.ID = ?";
+        PreparedStatement findAllUsers = connection.prepareStatement(findAllUsersSql);
+        ResultSet findUserResults = findAllUsers.executeQuery();
+        while (findUserResults.next()) {
+            String firstName = findUserResults.getString("FirstName");
+            String lastName = findUserResults.getString("LastName");
+            String ssn = findUserResults.getString("SSN");
+            AccountType accountType = AccountType.valueOf(findUserResults.getString("Type"));
+            double balance = findUserResults.getDouble("Balance");
+            int accountId = findUserResults.getInt("AccountId");
+            Account account;
+            if (accountType == AccountType.Checking) {
+                account = new Checking(accountId, balance);
+            } else if (accountType == AccountType.Savings) {
+                account = new Savings(accountId, balance);
+            } else {
+                System.err.println("Unknown account type");
+                throw new Exception("Unknown account type");
+            }
+            customers.add(new Customer(firstName, lastName, ssn, account));
+        }
+        }catch (Exception e){
+            System.err.println(e.getMessage());
+        }
+        return customers;
+    }
 }
