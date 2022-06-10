@@ -17,10 +17,8 @@ private final Account account;
     }
 
     public String basicInfo(){
-        return "First name: " + firstName +
-                " Last name: " + lastName +
-                " SSN: " + ssn +
-                " Account Number: " + account.getAccountNumber();
+        return  " Account Number: " + account.getAccountNumber() +
+                " - Name: " + firstName + " " + lastName;
     }
 
     Account getAccount(){
